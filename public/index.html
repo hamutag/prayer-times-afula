@@ -68,7 +68,7 @@
 
   <script>
     async function loadTimes() {
-      const res = await fetch('/api/times');
+      const res = await fetch('https://prayer-times-afula.onrender.com/api/times');
       const json = await res.json();
       const items = json.items;
       const sunrise = json.sunrise;
