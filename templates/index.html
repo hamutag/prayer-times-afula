@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>לוח תפילה קול יעקב עפולה</title>
+<style>
+body{background:#0a1525;color:#ffd700;font-family:sans-serif;text-align:center;}
+.logo{width:150px;}
+.section{margin:1rem;font-size:1.5rem;}
+.countdown{font-size:2rem;color:#f3cd5e;}
+</style>
+</head>
+<body>
+<img src="/static/logo.png" class="logo">
+<h1>בית הכנסת קול יעקב</h1>
+<div>לעילוי נשמת מאיר בן מסעודה וברוריה בת סעדה</div>
+<div class="section">נץ החמה: <span id="sunrise">--:--</span></div>
+<div class="section countdown" id="countdown">--:--:--</div>
+<div class="section">שקיעה: <span id="sunset">--:--</span></div>
+<div class="section">ערבית: <span id="arvit">--:--</span></div>
+<div class="section">הדלקת נרות: <span id="candle">--:--</span></div>
+<div class="section">הבדלה: <span id="havdala">--:--</span></div>
+<div class="section">פרשת השבוע: <span id="parasha">---</span></div>
+<script>
+fetch('/api/times').then(r=>r.json()).then(d=>{
+document.getElementById('sunrise').textContent=d.sunrise;
+document.getElementById('sunset').textContent=d.sunset;
+document.getElementById('arvit').textContent=d.tzeit;
+document.getElementById('candle').textContent=d.candle;
+document.getElementById('havdala').textContent=d.havdala;
+document.getElementById('parasha').textContent=d.parasha;
+let [h,m]=d.sunrise.split(':'),target=new Date();target.setHours(h,m-40,0);
+setInterval(()=>{
+let diff=target-new Date(),hrs=Math.floor(diff/36e5).toString().padStart(2,0),
+mins=Math.floor(diff%36e5/6e4).toString().padStart(2,0),
+secs=Math.floor(diff%6e4/1e3).toString().padStart(2,0);
+document.getElementById('countdown').textContent=`${hrs}:${mins}:${secs}`;
+},1000);});
+</script>
+</body>
+</html>
