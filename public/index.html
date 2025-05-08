@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>לוח תפילה עפולה - מלא</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: #0a1525;
+      color: #ffd700;
+      font-family: 'Rubik', sans-serif;
+      text-align: center;
+      padding: 1rem;
+    }
+    h1 { margin-bottom: 1rem; }
+    .section { margin-bottom: 1.5rem; font-size: 1.3rem; }
+    .label { font-weight: bold; }
+    input[type="text"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      width: 200px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #ffd700;
+      color: #0a1525;
+      cursor: pointer;
+    }
+    ul { list-style-type: none; padding: 0; }
+    li { margin: 0.3rem 0; }
+    @media (max-width: 600px) {
+      body { font-size: 1rem; }
+      .section { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🕯️ לוח תפילה עפולה</h1>
+
+  <div class="section" id="times">
+    <div><span class="label">נץ החמה:</span> <span id="sunrise">--:--</span></div>
+    <div><span class="label">שקיעה:</span> <span id="sunset">--:--</span></div>
+    <div><span class="label">צאת הכוכבים:</span> <span id="tzeit">--:--</span></div>
+    <div><span class="label">מנחה:</span> <span id="mincha">--:--</span></div>
+    <div><span class="label">ערבית:</span> <span id="arvit">--:--</span></div>
+    <div><span class="label">שיעור יומי:</span> <span id="shiur">--:--</span></div>
+  </div>
+
+  <div class="section">
+    <div><span class="label">פרשת השבוע:</span> <span id="parasha">טוען...</span></div>
+    <div><span class="label">הדלקת נרות:</span> <span id="candle">--:--</span></div>
+    <div><span class="label">הבדלה:</span> <span id="havdala">--:--</span></div>
+  </div>
+
+  <div class="section">
+    <div class="label">הוסף שם לעילוי נשמה:</div>
+    <input type="text" id="nameInput" placeholder="לדוגמה: יעקב בן שרה" />
+    <button onclick="addName()">הוסף</button>
+    <ul id="namesList"></ul>
+  </div>
+
+  <script>
+    async function loadTimes() {
+      try {
+        const res = await fetch('/api/times');
+        const data = await res.json();
+        const items = data.items;
+
+        const sunrise = "05:45";  // זמני דוגמה
+        const sunset = "19:15";
+        const tzeit = "19:35";
+
+        const mincha = calcEarlierTime(sunset, 30);
+        const shiur = calcEarlierTime(mincha, 60);
+
+        document.getElementById('sunrise').textContent = sunrise;
+        document.getElementById('sunset').textContent = sunset;
+        document.getElementById('tzeit').textContent = tzeit;
+        document.getElementById('mincha').textContent = mincha;
+        document.getElementById('arvit').textContent = tzeit;
+        document.getElementById('shiur').textContent = shiur;
+
+        document.getElementById('parasha').textContent =
+          items.find(i => i.category === 'parashat')?.title || 'לא נמצא';
+        document.getElementById('candle').textContent =
+          items.find(i => i.category === 'candles')?.title?.split(': ')[1] || '--:--';
+        document.getElementById('havdala').textContent =
+          items.find(i => i.category === 'havdalah')?.title?.split(': ')[1] || '--:--';
+
+      } catch (err) {
+        console.error("שגיאה בטעינה", err);
+      }
+    }
+
+    function calcEarlierTime(baseTime, minutesBefore) {
+      const [h, m] = baseTime.split(':').map(Number);
+      let total = h * 60 + m - minutesBefore;
+      if (total < 0) total += 1440;
+      const hh = String(Math.floor(total / 60)).padStart(2, '0');
+      const mm = String(total % 60).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    function addName() {
+      const input = document.getElementById('nameInput');
+      const name = input.value.trim();
+      if (!name) return;
+      const ul = document.getElementById('namesList');
+      const li = document.createElement('li');
+      li.textContent = name;
+      ul.appendChild(li);
+      input.value = '';
+    }
+
+    loadTimes();
+  </script>
+</body>
+</html>
