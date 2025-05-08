@@ -2,122 +2,140 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>לוח תפילה עפולה - מלא</title>
+  <title>לוח תפילה - קול יעקב עפולה</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="3600">
   <style>
     body {
-      background-color: #0a1525;
+      background: linear-gradient(#0a1525, #1e1e2f);
       color: #ffd700;
-      font-family: 'Rubik', sans-serif;
+      font-family: 'David Libre', 'Rubik', sans-serif;
       text-align: center;
       padding: 1rem;
     }
-    h1 { margin-bottom: 1rem; }
-    .section { margin-bottom: 1.5rem; font-size: 1.3rem; }
-    .label { font-weight: bold; }
-    input[type="text"] {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border-radius: 5px;
-      border: none;
+    h1 {
+      font-size: 2.5rem;
+      margin: 1rem 0 0.5rem;
+    }
+    .logo {
       width: 200px;
+      margin-top: 1rem;
     }
-    button {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      background-color: #ffd700;
-      color: #0a1525;
-      cursor: pointer;
+    .section {
+      font-size: 1.8rem;
+      margin: 1rem 0;
     }
-    ul { list-style-type: none; padding: 0; }
-    li { margin: 0.3rem 0; }
-    @media (max-width: 600px) {
-      body { font-size: 1rem; }
-      .section { font-size: 1.1rem; }
+    .label {
+      font-weight: bold;
+    }
+    .countdown {
+      font-size: 2.5rem;
+      margin-top: 1rem;
+      color: #f3cd5e;
+    }
+    #sunrise-alert {
+      display: none;
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      background: #ffd700;
+      color: #000;
+      font-size: 3rem;
+      font-weight: bold;
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>🕯️ לוח תפילה עפולה</h1>
+  <img src="logo.png" alt="לוגו" class="logo" />
+  <h1>בית הכנסת קול יעקב</h1>
+  <div class="section">לעילוי נשמת מאיר בן מסעודה וברוריה בת סעדה</div>
 
-  <div class="section" id="times">
-    <div><span class="label">נץ החמה:</span> <span id="sunrise">--:--</span></div>
-    <div><span class="label">שקיעה:</span> <span id="sunset">--:--</span></div>
-    <div><span class="label">צאת הכוכבים:</span> <span id="tzeit">--:--</span></div>
-    <div><span class="label">מנחה:</span> <span id="mincha">--:--</span></div>
-    <div><span class="label">ערבית:</span> <span id="arvit">--:--</span></div>
-    <div><span class="label">שיעור יומי:</span> <span id="shiur">--:--</span></div>
-  </div>
+  <div class="section"><span class="label">נץ החמה:</span> <span id="sunrise">--:--</span></div>
+  <div class="section"><span class="label">ספירה לנץ:</span> <span class="countdown" id="countdown">--:--:--</span></div>
+  <div class="section"><span class="label">שקיעה:</span> <span id="sunset">--:--</span></div>
+  <div class="section"><span class="label">מנחה:</span> <span id="mincha">--:--</span></div>
+  <div class="section"><span class="label">ערבית:</span> <span id="arvit">--:--</span></div>
+  <div class="section"><span class="label">שיעור יומי:</span> <span id="shiur">--:--</span></div>
 
-  <div class="section">
-    <div><span class="label">פרשת השבוע:</span> <span id="parasha">טוען...</span></div>
-    <div><span class="label">הדלקת נרות:</span> <span id="candle">--:--</span></div>
-    <div><span class="label">הבדלה:</span> <span id="havdala">--:--</span></div>
-  </div>
+  <div class="section"><span class="label">הדלקת נרות:</span> <span id="candle">--:--</span></div>
+  <div class="section"><span class="label">הבדלה:</span> <span id="havdala">--:--</span></div>
+  <div class="section"><span class="label">פרשת השבוע:</span> <span id="parasha">טוען...</span></div>
 
-  <div class="section">
-    <div class="label">הוסף שם לעילוי נשמה:</div>
-    <input type="text" id="nameInput" placeholder="לדוגמה: יעקב בן שרה" />
-    <button onclick="addName()">הוסף</button>
-    <ul id="namesList"></ul>
-  </div>
+  <div id="sunrise-alert">הגיע זמן נץ החמה!</div>
 
   <script>
     async function loadTimes() {
-      try {
-        const res = await fetch('/api/times');
-        const data = await res.json();
-        const items = data.items;
+      const res = await fetch('/api/times');
+      const json = await res.json();
+      const items = json.items;
+      const sunrise = json.sunrise;
+      const sunset = json.sunset;
+      const tzeit = json.tzeit;
 
-        const sunrise = "05:45";  // זמני דוגמה
-        const sunset = "19:15";
-        const tzeit = "19:35";
+      const candle = items.find(i => i.category === 'candles');
+      const havdala = items.find(i => i.category === 'havdalah');
+      const parasha = items.find(i => i.category === 'parashat');
 
-        const mincha = calcEarlierTime(sunset, 30);
-        const shiur = calcEarlierTime(mincha, 60);
+      const format = t => t || '--:--';
+      document.getElementById('sunrise').textContent = format(sunrise);
+      document.getElementById('sunset').textContent = format(sunset);
+      document.getElementById('arvit').textContent = format(tzeit);
+      document.getElementById('candle').textContent = candle?.title?.split(': ')[1] || '--:--';
+      document.getElementById('havdala').textContent = havdala?.title?.split(': ')[1] || '--:--';
+      document.getElementById('parasha').textContent = parasha?.title || '---';
 
-        document.getElementById('sunrise').textContent = sunrise;
-        document.getElementById('sunset').textContent = sunset;
-        document.getElementById('tzeit').textContent = tzeit;
-        document.getElementById('mincha').textContent = mincha;
-        document.getElementById('arvit').textContent = tzeit;
-        document.getElementById('shiur').textContent = shiur;
+      const [sh, sm] = (sunset || "19:15").split(':').map(Number);
+      const mincha = new Date();
+      mincha.setHours(sh);
+      mincha.setMinutes(sm - 30);
+      document.getElementById('mincha').textContent = mincha.toTimeString().slice(0, 5);
 
-        document.getElementById('parasha').textContent =
-          items.find(i => i.category === 'parashat')?.title || 'לא נמצא';
-        document.getElementById('candle').textContent =
-          items.find(i => i.category === 'candles')?.title?.split(': ')[1] || '--:--';
-        document.getElementById('havdala').textContent =
-          items.find(i => i.category === 'havdalah')?.title?.split(': ')[1] || '--:--';
+      const shiur = new Date(mincha);
+      shiur.setMinutes(shiur.getMinutes() - 60);
+      document.getElementById('shiur').textContent = shiur.toTimeString().slice(0, 5);
 
-      } catch (err) {
-        console.error("שגיאה בטעינה", err);
+      if (sunrise) startCountdown(sunrise);
+    }
+
+    function startCountdown(sunriseStr) {
+      const [h, m] = sunriseStr.split(':').map(Number);
+      const target = new Date();
+      target.setHours(h);
+      target.setMinutes(m - 40);
+      target.setSeconds(0);
+
+      function update() {
+        const now = new Date();
+        let diff = target - now;
+
+        if (diff <= 0) {
+          document.getElementById('sunrise-alert').style.display = 'flex';
+          setTimeout(() => {
+            document.getElementById('sunrise-alert').style.display = 'none';
+          }, 60000);
+          return;
+        }
+
+        const hrs = String(Math.floor(diff / 3600000)).padStart(2, '0');
+        const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+        document.getElementById('countdown').textContent = `${hrs}:${mins}:${secs}`;
+        requestAnimationFrame(update);
       }
-    }
 
-    function calcEarlierTime(baseTime, minutesBefore) {
-      const [h, m] = baseTime.split(':').map(Number);
-      let total = h * 60 + m - minutesBefore;
-      if (total < 0) total += 1440;
-      const hh = String(Math.floor(total / 60)).padStart(2, '0');
-      const mm = String(total % 60).padStart(2, '0');
-      return `${hh}:${mm}`;
-    }
-
-    function addName() {
-      const input = document.getElementById('nameInput');
-      const name = input.value.trim();
-      if (!name) return;
-      const ul = document.getElementById('namesList');
-      const li = document.createElement('li');
-      li.textContent = name;
-      ul.appendChild(li);
-      input.value = '';
+      update();
     }
 
     loadTimes();
+    setInterval(() => {
+      const now = new Date();
+      if (now.getHours() === 1 && now.getMinutes() === 0) {
+        location.reload();
+      }
+    }, 60000);
   </script>
 </body>
 </html>
